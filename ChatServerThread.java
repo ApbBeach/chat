@@ -47,6 +47,12 @@ public class ChatServerThread extends Thread{
 				running = false;
 			}
 		}
+		try {
+			close();
+		} catch (IOException e) {
+			System.out.println("Error closing server: " + e.getMessage());
+			e.printStackTrace();
+		}
 	}
 
 

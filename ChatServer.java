@@ -31,6 +31,7 @@ public class ChatServer implements Runnable{
 				stop(); 
 			}
 		}
+		stop();
 	}
 	
 	public void start()  {
