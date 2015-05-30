@@ -1,13 +1,20 @@
 import java.net.*;
 import java.io.*;
 
-public class ChatServer implements Runnable{  
-	private ChatServerThread clients[] = new ChatServerThread[50];
-	private ServerSocket server = null;
-	private Thread       thread = null;
-	private int          clientCount = 0;
-	public boolean 		 running = true;
+public class ChatServer implements Runnable{
+	//List of connected clients: contains server socket and ID
+	private ChatServerThread clients[]     = new ChatServerThread[50];
+	//Main server socket
+	private ServerSocket 	 server 	   = null;
+	//Individual client threads
+	private Thread       	 thread 	   = null;
+	//Number of connected clients
+	private int          	 clientCount   = 0;
+	//Is the server running and accepting client connections
+	public boolean 		 	 running 	   = true;
 
+	
+	//Sets up chat server socket 'server' on port number 'port'
 	public ChatServer(int port){  
 		try{  
 			System.out.println("Binding to port " + port + ", please wait  ...");
@@ -20,6 +27,7 @@ public class ChatServer implements Runnable{
 		}
 	}
 
+	//Waits for clients to attempt to connect and accepts them
 	public void run(){  
 		while (running){  
 			try{  
@@ -34,6 +42,7 @@ public class ChatServer implements Runnable{
 		stop();
 	}
 	
+	//Starts client thread, used when client connects
 	public void start()  {
 		if (thread == null){  
 			thread = new Thread(this); 
@@ -41,6 +50,7 @@ public class ChatServer implements Runnable{
 		}
 	}
 
+	//Ends server connection, used on error.
 	public void stop()   { 
 		if (thread != null){  
 			running = false; 
@@ -49,6 +59,7 @@ public class ChatServer implements Runnable{
 	}
 
 
+	//Returns client name by assigned ID
 	private int findClient(int ID){  
 		for (int i = 0; i < clientCount; i++)
 			if (clients[i].getID() == ID)
@@ -56,7 +67,9 @@ public class ChatServer implements Runnable{
 		return -1;
 	}
 
-
+	//'.bye' used by client to remove self from server.  
+	//Otherwise accepts input from a single client and sends it to all other connected clients
+	
 	public synchronized void handle(int ID, String input){  
 		if (input.equals(".bye")){  
 			clients[findClient(ID)].send(".bye");
@@ -69,7 +82,7 @@ public class ChatServer implements Runnable{
 	}
 
 
-
+	//Used on '.bye' to remove client from server.  Terminates their thread and removes them from the client list
 	public synchronized void remove(int ID){
 		int client_id = findClient(ID);
 		if (client_id >= 0){  
@@ -91,7 +104,8 @@ public class ChatServer implements Runnable{
 	}
 
 
-
+	//Adds client to the server, opens client to accpet/send messages through data stream
+	//starts client socket.  Updates client count list, ensures the client list is below the maximum. 
 	private void addThread(Socket socket){  
 		if (clientCount < clients.length){  
 			System.out.println("Client accepted: " + socket);

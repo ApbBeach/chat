@@ -14,7 +14,7 @@ public class ChatClientThread extends Thread{
 		start();
 	}
 	
-	
+	//Opens client thread to recieve input.
 	public void open(){  
 		try{  
 			streamIn  = new DataInputStream(socket.getInputStream());
@@ -24,7 +24,7 @@ public class ChatClientThread extends Thread{
 		}
 	}
 	
-	
+	//Closes client thread to recieve input.
 	public void close(){  
 		try{  
 			if (streamIn != null) streamIn.close();
@@ -33,7 +33,7 @@ public class ChatClientThread extends Thread{
 		}
 	}
 	
-	
+	//Uses handle to read messages sent to client and display them in standard output
 	public void run(){  
 		while (running){  
 			try{  

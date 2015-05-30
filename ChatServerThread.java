@@ -16,7 +16,7 @@ public class ChatServerThread extends Thread{
 	ID     = socket.getPort();
 	}
 
-
+	//Used by server to send messages to clients
 	public void send(String msg){   
 		try{  
 			streamOut.writeUTF(msg);
@@ -29,12 +29,13 @@ public class ChatServerThread extends Thread{
 		}
 	}
 
+	//Gets client's ID (Socket port number)
 	public int getID(){
 		int client_id = ID;
 		return client_id;
 	}
 
-
+	//TO-DO
 	public void run(){  
 		System.out.println("Server Thread " + ID + " running.");
 		while (running){  
@@ -55,13 +56,13 @@ public class ChatServerThread extends Thread{
 		}
 	}
 
-
+	//opens client to accpet/send messages through data stream
 	public void open() throws IOException{  
 		streamIn = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 		streamOut = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 	}
 
-
+	//Closes client socket connection to the server as well as their input and output streams 
 	public void close() throws IOException{  
 		if (socket != null)    socket.close();
 		if (streamIn != null)  streamIn.close();

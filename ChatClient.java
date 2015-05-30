@@ -6,11 +6,13 @@ import java.io.*;
 public class ChatClient implements Runnable{  
 	private Socket socket              = null;
 	private Thread thread              = null;
-	private BufferedReader  console   = null;
+	private BufferedReader  console    = null;
 	private DataOutputStream streamOut = null;
 	private ChatClientThread client    = null;
-	public boolean running			= true;
+	public boolean running			   = true;
 
+	
+	//Connects client to server serverName and port serverPort
 	public ChatClient(String serverName, int serverPort){  
 		System.out.println("Establishing connection. Please wait ...");
 		try{  
@@ -23,6 +25,7 @@ public class ChatClient implements Runnable{
 			System.out.println("Unexpected exception: " + ioe.getMessage()); }
 	}
 
+	//While running allows client to send messages to the server through standard input
 	public void run(){  
 		while (running){  
 			try{  
@@ -38,6 +41,7 @@ public class ChatClient implements Runnable{
 	}
 
 
+	//Handles message sending/recieving.  If 'bye is recieved the connection in closed, otherwise displays to standard output
 	public void handle(String msg){  
 		if (msg.equals(".bye")){  
 			System.out.println("Good bye. Press RETURN to exit ...");
@@ -46,7 +50,7 @@ public class ChatClient implements Runnable{
 			System.out.println(msg);
 	}
 
-
+	//Starts the clients connection to server/port
 	public void start() throws IOException{  
 		console = new BufferedReader(new InputStreamReader(System.in));
 		streamOut = new DataOutputStream(socket.getOutputStream());
@@ -57,7 +61,7 @@ public class ChatClient implements Runnable{
 		}
 	}
 
-
+	//Closes socket/input/output stream
 	public void stop(){  
 		if (thread != null){  
 			this.running = false;  
