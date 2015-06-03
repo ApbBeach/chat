@@ -1,4 +1,5 @@
 
+import java.io.IOException;
 import java.util.HashMap;
 
 /*
@@ -158,7 +159,14 @@ public class ChatGUI extends javax.swing.JFrame {
 
     private void sendButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendButtonActionPerformed
         // TODO add your handling code here:
-    	client.handle("Test");
+    	try {
+			client.streamOut.writeUTF(userMessageArea.getText());
+			activeMessagesArea.append(thisUser + ": " + userMessageArea.getText()+ "\n");
+			userMessageArea.setText("");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }//GEN-LAST:event_sendButtonActionPerformed
 
     private void connectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_connectButtonActionPerformed

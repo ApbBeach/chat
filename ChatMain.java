@@ -11,7 +11,7 @@
 public class ChatMain {
     
     public static void main( String[] args ) {
-        new ChatServer(4433);
-        new ChatGUI("localhost", 4433).setVisible(true);
+        new ChatServer(2345);
+        new ChatGUI("localhost", 2345).setVisible(true);
     }
 }

@@ -7,7 +7,7 @@ public class ChatClient implements Runnable{
 	private Socket socket              = null;
 	private Thread thread              = null;
 	private BufferedReader  console    = null;
-	private DataOutputStream streamOut = null;
+	DataOutputStream streamOut = null;
 	private ChatClientThread client    = null;
 	public boolean running			   = true;
 
@@ -29,7 +29,7 @@ public class ChatClient implements Runnable{
 	public void run(){  
 		while (running){  
 			try{  
-				streamOut.writeUTF(console.toString());
+				//streamOut.writeUTF(console.toString());
 				streamOut.flush();
 			} catch(IOException ioe){  
 				System.out.println("Sending error: " + ioe.getMessage());
