@@ -1,91 +1,207 @@
 
 
 import java.net.*;
+import java.util.Scanner;
 import java.io.*;
 
-public class ChatClient implements Runnable{  
-	private Socket socket              = null;
+
+
+public class ChatClient{  
+	private Socket socket;
 	private Thread thread              = null;
 	private BufferedReader  console    = null;
-	DataOutputStream streamOut = null;
-	private ChatClientThread client    = null;
 	public boolean running			   = true;
-
+	private ChatGUI cg;
+	private String server, username;
+	private int port;
+	private ObjectInputStream streamIn;		// to read from the socket
+	private ObjectOutputStream streamOut;		// to write on the socket
 	
+	ChatClient(String server, int port, String username) {
+		this(server, port, username, null);
+	}
 	//Connects client to server serverName and port serverPort
-	public ChatClient(String serverName, int serverPort){  
-		System.out.println("Establishing connection. Please wait ...");
-		try{  
-			socket = new Socket(serverName, serverPort);
-			System.out.println("Connected: " + socket);
-			start();
-		} catch(UnknownHostException uhe){  
-			System.out.println("Host unknown: " + uhe.getMessage()); }
-		catch(IOException ioe){  
-			System.out.println("Unexpected exception: " + ioe.getMessage()); }
+	public ChatClient(String server, int port, String username, ChatGUI cg){  
+		this.server = server;
+		this.port = port;
+		this.username = username;
+		// save if we are in GUI mode or not
+		this.cg = cg;
 	}
 
-	//While running allows client to send messages to the server through standard input
-	public void run(){  
-		while (running){  
-			try{  
-				//streamOut.writeUTF(console.toString());
-				streamOut.flush();
-			} catch(IOException ioe){  
-				System.out.println("Sending error: " + ioe.getMessage());
-				stop();
-				running = false;
-			}
-		}
-		stop();
-	}
-
-
-	//Handles message sending/recieving.  If 'bye is recieved the connection in closed, otherwise displays to standard output
+	//Handles message sending/recieving.
 	public void handle(String msg){  
-		if (msg.equals(".bye")){  
-			System.out.println("Good bye. Press RETURN to exit ...");
-			stop();
-		} else
-			System.out.println(msg);
+		cg.append(msg + "\n");		
 	}
 
 	//Starts the clients connection to server/port
-	public void start() throws IOException{  
-		console = new BufferedReader(new InputStreamReader(System.in));
-		streamOut = new DataOutputStream(socket.getOutputStream());
-		if (thread == null){  
-			client = new ChatClientThread(this, socket);
-			thread = new Thread(this);                   
-			thread.start();
-		}
+	public boolean start() throws IOException{  
+		
+			// try to connect to the server
+				try {
+					socket = new Socket(server, port);
+				} 
+				// if it failed not much I can so
+				catch(Exception ec) {
+					handle("Error connectiong to server:" + ec);
+					return false;
+				}
+				
+				String msg = "Connection accepted " + socket.getInetAddress() + ":" + socket.getPort();
+				handle(msg);
+			
+				/* Creating both Data Stream */
+				try
+				{
+					streamIn  = new ObjectInputStream(socket.getInputStream());
+					streamOut = new ObjectOutputStream(socket.getOutputStream());
+				}
+				catch (IOException eIO) {
+					handle("Exception creating new Input/output Streams: " + eIO);
+					return false;
+				}
+
+				// creates the Thread to listen from the server 
+				new ListenFromServer().start();
+				// Send our username to the server this is the only message that we
+				// will send as a String. All other messages will be ChatMessage objects
+				try
+				{
+					streamOut.writeObject(username);
+				}
+				catch (IOException eIO) {
+					handle("Exception doing login : " + eIO);
+					stop();
+					return false;
+				}
+				// success we inform the caller that it worked
+				return true;
+		
 	}
 
 	//Closes socket/input/output stream
 	public void stop(){  
-		if (thread != null){  
-			this.running = false;  
-			thread = null;
-		} try{  
-			if (console   != null)  console.close();
-			if (streamOut != null)  streamOut.close();
-			if (socket    != null)  socket.close();
-		} catch(IOException ioe){  
-			System.out.println("Error closing ..."); 
-			}
-		client.running = false;
+		try { 
+			if(streamIn != null) streamIn.close();
+		}
+		catch(Exception e) {} // not much else I can do
+		try {
+			if(streamOut != null) streamOut.close();
+		}
+		catch(Exception e) {} // not much else I can do
+        try{
+			if(socket != null) socket.close();
+		}
+		catch(Exception e) {} // not much else I can do
+		
 	}
 
+	/*
+	 * To send a message to the server
+	 */
+	void sendMessage(ChatMessage msg) {
+		try {
+			streamOut.writeObject(msg);
+		}
+		catch(IOException e) {
+			handle("Exception writing to server: " + e);
+		}
+	}
 
-	public static void main(String args[]){  
-		ChatClient client = null;
-		/* if (args.length != 2)
-         System.out.println("Usage: java ChatClient host port");
-      else
-         client = new ChatClient(args[0], Integer.parseInt(args[1]));
-		 */
-		client = new ChatClient("localhost", 4443);
+	public static void main(String args[]) throws IOException{  
+		// default values
+				int portNumber = 1232;
+				String serverAddress = "localhost";
+				String userName = "Anonymous";
+
+				// depending of the number of arguments provided we fall through
+				switch(args.length) {
+					// > javac Client username portNumber serverAddr
+					case 3:
+						serverAddress = args[2];
+					// > javac Client username portNumber
+					case 2:
+						try {
+							portNumber = Integer.parseInt(args[1]);
+						}
+						catch(Exception e) {
+							System.out.println("Invalid port number.");
+							System.out.println("Usage is: > java Client [username] [portNumber] [serverAddress]");
+							return;
+						}
+					// > javac Client username
+					case 1: 
+						userName = args[0];
+					// > java Client
+					case 0:
+						break;
+					// invalid number of arguments
+					default:
+						System.out.println("Usage is: > java Client [username] [portNumber] {serverAddress]");
+					return;
+				}
+				// create the Client object
+				ChatClient client = new ChatClient(serverAddress, portNumber, userName);
+				// test if we can start the connection to the Server
+				// if it failed nothing we can do
+				if(!client.start())
+					return;
+				
+				// wait for messages from user
+				Scanner scan = new Scanner(System.in);
+				// loop forever for message from the user
+				while(true) {
+					System.out.print("> ");
+					// read message from user
+					String msg = scan.nextLine();
+					// logout if message is LOGOUT
+					if(msg.equalsIgnoreCase("LOGOUT")) {
+						client.sendMessage(new ChatMessage(ChatMessage.LOGOUT, ""));
+						// break to do the disconnect
+						break;
+					}
+					// message WhoIsIn
+					else if(msg.equalsIgnoreCase("WHOISIN")) {
+						client.sendMessage(new ChatMessage(ChatMessage.WHOISIN, ""));				
+					}
+					else {				// default to ordinary message
+						client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, msg));
+					}
+				}
+				// done disconnect
+				client.stop();	
+	}
+
+/*
+ * a class that waits for the message from the server and append them to the JTextArea
+ * if we have a GUI or simply System.out.println() it in console mode
+ */
+class ListenFromServer extends Thread {
+
+	public void run() {
+		while(true) {
+			try {
+				String msg = (String) streamIn.readObject();
+				// if console mode print the message and add back the prompt
+				if(cg == null) {
+					System.out.println(msg);
+					System.out.print("> ");
+				}
+				else {
+					handle(msg);
+				}
+			}
+			catch(IOException e) {
+				handle("Server has close the connection: " + e);
+				break;
+			}
+			// can't happen with a String object but need the catch anyhow
+			catch(ClassNotFoundException e2) {
+			}
+		}
 	}
 }
+}
+
 
 
