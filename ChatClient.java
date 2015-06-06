@@ -20,7 +20,7 @@ public class ChatClient{
 	ChatClient(String server, int port, String username) {
 		this(server, port, username, null);
 	}
-	//Connects client to server serverName and port serverPort
+
 	public ChatClient(String server, int port, String username, ChatGUI cg){  
 		this.server = server;
 		this.port = port;
@@ -99,7 +99,7 @@ public class ChatClient{
 	/*
 	 * To send a message to the server
 	 */
-	void sendMessage(ChatMessage msg) {
+	void sendMessage(String msg) {
 		try {
 			streamOut.writeObject(msg);
 		}
@@ -110,36 +110,10 @@ public class ChatClient{
 
 	public static void main(String args[]) throws IOException{  
 		// default values
-				int portNumber = 1232;
+				int portNumber = 5554;
 				String serverAddress = "localhost";
 				String userName = "Anonymous";
 
-				// depending of the number of arguments provided we fall through
-				switch(args.length) {
-					// > javac Client username portNumber serverAddr
-					case 3:
-						serverAddress = args[2];
-					// > javac Client username portNumber
-					case 2:
-						try {
-							portNumber = Integer.parseInt(args[1]);
-						}
-						catch(Exception e) {
-							System.out.println("Invalid port number.");
-							System.out.println("Usage is: > java Client [username] [portNumber] [serverAddress]");
-							return;
-						}
-					// > javac Client username
-					case 1: 
-						userName = args[0];
-					// > java Client
-					case 0:
-						break;
-					// invalid number of arguments
-					default:
-						System.out.println("Usage is: > java Client [username] [portNumber] {serverAddress]");
-					return;
-				}
 				// create the Client object
 				ChatClient client = new ChatClient(serverAddress, portNumber, userName);
 				// test if we can start the connection to the Server
@@ -155,27 +129,13 @@ public class ChatClient{
 					// read message from user
 					String msg = scan.nextLine();
 					// logout if message is LOGOUT
-					if(msg.equalsIgnoreCase("LOGOUT")) {
-						client.sendMessage(new ChatMessage(ChatMessage.LOGOUT, ""));
-						// break to do the disconnect
-						break;
-					}
-					// message WhoIsIn
-					else if(msg.equalsIgnoreCase("WHOISIN")) {
-						client.sendMessage(new ChatMessage(ChatMessage.WHOISIN, ""));				
-					}
-					else {				// default to ordinary message
-						client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, msg));
-					}
+					
+						client.sendMessage(msg);
+					
 				}
-				// done disconnect
-				client.stop();	
 	}
 
-/*
- * a class that waits for the message from the server and append them to the JTextArea
- * if we have a GUI or simply System.out.println() it in console mode
- */
+//listens for messages sent from server
 class ListenFromServer extends Thread {
 
 	public void run() {

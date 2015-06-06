@@ -178,7 +178,7 @@ public class ChatGUI extends javax.swing.JFrame {
     }//GEN-LAST:event_usernameFieldActionPerformed
 
     private void sendButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendButtonActionPerformed
-    	client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, userMessageArea.getText()));
+    	client.sendMessage(userMessageArea.getText());
     	userMessageArea.setText("");
     }//GEN-LAST:event_sendButtonActionPerformed
 
@@ -190,7 +190,7 @@ public class ChatGUI extends javax.swing.JFrame {
             // Check for username length > requiredUsernameLength
             if ( usernameField.getText().length() >= requiredUsernameLength ) {
             	String username = usernameField.getText();
-            	int port = 1232;
+            	int port = 5554;
             	String server = "localhost";
                 // Create client
                client = new ChatClient(server, port, username, this);

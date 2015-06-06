@@ -12,8 +12,6 @@ public class ChatServer {
 	private ArrayList < ClientThread > clients;
 	private int port;
 	private static int uniqueId;
-	private Thread thread = null;
-	private int clientCount = 0;
 	//Is the server running and accepting client connections
 	private boolean running = true;
 
@@ -97,7 +95,7 @@ public class ChatServer {
 	}
 
 	public static void main(String args[]) throws Exception {
-		int portNumber = 1232;
+		int portNumber = 5554;
 		ChatServer server = new ChatServer(portNumber);
 		server.start();
 	}
@@ -112,7 +110,7 @@ public class ChatServer {
 		ObjectOutputStream streamOut;
 		int id;
 		String username;
-		ChatMessage cm;
+		String cm;
 		ClientThread(Socket socket) {
 			id = ++uniqueId;
 			this.socket = socket;
@@ -133,31 +131,17 @@ public class ChatServer {
 			boolean running = true;
 			while (running) {
 				try {
-					cm = (ChatMessage) streamIn.readObject();
+					cm = (String) streamIn.readObject();
 				} catch (IOException e) {
 					System.out.println(username + " Exception reading Streams: " + e);
 					break;
 				} catch (ClassNotFoundException e2) {
 					break;
 				}
-				String message = cm.getMessage();
+				String message = cm;
 
-				switch(cm.getType()) {
-
-				case ChatMessage.MESSAGE:
 					handle(username + ": " + message);
-					
-				case ChatMessage.LOGOUT:
-					System.out.println(username + " disconnected with a LOGOUT message.");
-					running = false;
-					break;
-				case ChatMessage.WHOISIN:
-					for(int i = 0; i < clients.size(); ++i) {
-						ClientThread ct = clients.get(i);
-						writeMsg((i+1) + ") " + ct.username);
-					}
-					break;
-				}
+
 				
 				
 				
